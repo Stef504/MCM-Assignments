@@ -116,6 +116,7 @@ classdef geometricModel < handle
             disp("2T6:");
             disp(bTk);
             
+            %Inverse
             ident=[0 0 0 1];
             Rotation_matrix= bTk(1:3, 1:3);
             Pose_26= bTk(1:3,4);

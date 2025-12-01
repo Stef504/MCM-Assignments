@@ -28,6 +28,8 @@ classdef kinematicModel < handle
             % bJi
             
             %TO DO
+
+            
         end
 
         function updateJacobian(self)
