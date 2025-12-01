@@ -1,0 +1,21 @@
+1T2
+-90x, 90z translation: 0.110z
+
+2T3
+90y, 90z translation:0.1x
+
+3T4
+-90z, -90y translation:0.325z
+
+4T5
++90y,90z translation: 0.095x
+
+5T6
+translation: 0.095z
+
+6T7
+translation: 0.235+0.120(z)
+
+7TE
+translation: 0.060z
+
