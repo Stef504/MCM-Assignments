@@ -30,6 +30,7 @@ classdef geometricModel < handle
                 error('Not enough input arguments (iTj_0) (jointType)')
             end
         end
+
         function updateDirectGeometry(self, q)
             %%% GetDirectGeometryFunction
             % This method update the matrices iTj.
@@ -60,8 +61,8 @@ classdef geometricModel < handle
                 end
                 
                  self.iTj(:,:,i) = self.iTj_0(:,:,i)*T; %iTj=Ti*T(qi)  
-           
-                
+                 %T_01,T_12,T_23,T_34,T_45,T_56,T_67
+          
             end
                 
                 
@@ -76,22 +77,15 @@ classdef geometricModel < handle
             % bTk : transformation matrix from the manipulator base to the k-th joint in
             % the configuration identified by iTj.
             bTk=eye(4,4);
-
-            %task dependant
-            T7ee=[1 0 0 0;
-                  0 1 0 0;
-                  0 0 1 0.060;
-                  0 0 0 1];
+           
             %TO DO
             for i= 1:k
 
-              
                 bTk = bTk * self.iTj(:,:,i);
-                 
                 
             end
 
-            bTk=bTk*T7ee;
+            
 
         end
         function [bTk] = getTransform6wrt2(self,k)
@@ -106,25 +100,14 @@ classdef geometricModel < handle
             
             %TO DO
             for i= 3:k
-
               
                 bTk = bTk * self.iTj(:,:,i);
-                 
                 
             end
-            bTk;
-            disp("2T6:");
-            disp(bTk);
             
-            %Inverse
-            ident=[0 0 0 1];
-            Rotation_matrix= bTk(1:3, 1:3);
-            Pose_26= bTk(1:3,4);
-
-            Transformation_62=[Rotation_matrix' ((-Rotation_matrix')*Pose_26); ident];
-
-            disp("6T2:");
-            disp(Transformation_62);
+            
+            
+           
 
 
         end
