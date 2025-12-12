@@ -31,21 +31,23 @@ classdef kinematicModel < handle
             %TO DO
             T_n_base= self.gm.getTransformWrtBase(7);
             r_n_base= T_n_base(1:3,4);
+
             for k= 1:i
+                T_base=self.gm.getTransformWrtBase(k);
 
                 if self.gm.jointType(k) == 0 
-                    J_A = self.gm.iTj(1:3,3,k);
+                    J_A = T_base(1:3,3);
                     
                     %linear of revolute
-                    bTk = self.gm.getTransformWrtBase(k);
-                    r_n_k = bTk(1:3,4);
-                    axis_rotation = self.gm.iTj(1:3,3,k);
+                
+                    r_n_k = T_base(1:3,4);
+                    axis_rotation = T_base(1:3,3);
                     J_L= cross(axis_rotation, (r_n_base - r_n_k));
                 end
 
                 if self.gm.jointType(k) == 1
                     J_A=[0 0 0];
-                    J_L= self.gm.iTj(1:3,3,k);
+                    J_L= T_base(1:3,3);
                 end
 
                 bJi(1:3,k,:)= J_A(:,:);
@@ -61,16 +63,7 @@ classdef kinematicModel < handle
         % The function update:
         % - J: end-effector jacobian matrix
 
-        function S = skew(a)
-            % input: skew matrix S_a (3x3)
-            % output: the original a vector (3x1)
-            x=a(1);
-            y=a(2);
-            z=a(3);
-            
-            S=[0 -z y;z 0 -x; -y x 0];
-         end
-            % TO DO
+         % TO DO
             self.J=zeros(6,self.gm.jointNumber)
 
             %task dependant

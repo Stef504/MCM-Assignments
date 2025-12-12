@@ -49,8 +49,8 @@ classdef geometricModel < handle
                 if self.jointType(i)== 0
                     T=[cos(q(i)) -sin(q(i))   0   0;
                         sin(q(i)) cos(q(i))   0   0;
-                        0       0       1   0;
-                        0       0       0   1];
+                        0           0         1   0;
+                        0           0         0   1];
                 end
 
                 if self.jointType(i)== 1
@@ -63,8 +63,7 @@ classdef geometricModel < handle
                  self.iTj(:,:,i) = self.iTj_0(:,:,i)*T; %iTj=Ti*T(qi)  
                  %T_01,T_12,T_23,T_34,T_45,T_56,T_67
           
-            end
-                
+            end               
                 
       
 
@@ -82,6 +81,7 @@ classdef geometricModel < handle
             for i= 1:k
 
                 bTk = bTk * self.iTj(:,:,i);
+                %T_0K= eye * T_01 and keep mutipling until k
                 
             end
 

@@ -5,6 +5,7 @@ clear;
 addpath('include'); % put relevant functions inside the /include folder 
 
 %% Compute the geometric model for the given manipulator
+
 iTj_0 = BuildTree();
 disp('iTj_0')
 disp(iTj_0);
@@ -24,7 +25,7 @@ disp("Transformation matrix from the base to the EE:");
 disp(Tb_e);
 
 T2_6= geometricModel.getTransform6wrt2(6);
-disp("Transformation of frame 6 wrt to frame 2");
+disp("Transformation matrix from frame 2 to 6:");
 disp(T2_6);
 %Inverse
 ident=[0 0 0 1];
@@ -33,7 +34,7 @@ Pose_26= T2_6(1:3,4);
 
 Transformation_62=[Rotation_matrix' ((-Rotation_matrix')*Pose_26); ident];
 
-disp("Transformation of frame 2 wrt to frame 6:");
+disp("Transformation matrix from frame 6 to 2:");
 disp(Transformation_62);
 
 %% Q1.4 Simulation
@@ -132,42 +133,40 @@ km.updateJacobian;
 disp("Jacobian of the end effector with respect to base");
 disp(km.J);
 
-%this gives up to n 
-angular_velocity_base = km.J(1:3,:) * q_velocities';
-linear_velocity_base = km.J(4:6,:) * q_velocities';
+Tb_n= geometricModel.getTransformWrtBase(7);
+T7ee=[1 0 0 0;
+      0 1 0 0;
+      0 0 1 0.060;
+      0 0 0 1];
 
-%adding EE
-angular_velocity_ee= angular_velocity_base; 
-%because frame of EE does not rotate about <n>
+Tb_e=Tb_n*T7ee;
+disp("Transformation matrix from base to end effector, projected in base frame:");
+disp(Tb_e);
 
-%linear part of EE
-function S = skew(a)
-    % input: skew matrix S_a (3x3)
-    % output: the original a vector (3x1)
-    x=a(1);
-    y=a(2);
-    z=a(3);
-    
-    S=[0 -z y;z 0 -x; -y x 0];
-end
+Te_b= inv(Tb_e);
+disp("Inverse of Tb_e");
+disp(Te_b);
 
-r_en=[0 0 0.060];
-skew_r_en= skew(r_en);
-linear_velocity_ee = skew_r_en'*angular_velocity_base + linear_velocity_base;
+twist_ee= km.J*q_velocities';
+disp("Velocity of end effector in base frame:")
+disp(twist_ee);
 
-%wrt to the ee frame
-rotation_matrix_base_ee = geometricModel.iTj(1:3,1:3) ;
-transpose_rotation_matrix = rotation_matrix_base_ee';
+R= Te_b(1:3,1:3);
+P= Te_b(1:3,4);
+Adj= [R zeros(3);skew(P)*R R];
 
-angular_ee_frame = transpose_rotation_matrix * angular_velocity_ee;
+%inverse of adjoint is the same of adj of inverse
+R_1= Tb_e(1:3,1:3);
+P_1= Tb_e(1:3,4);
+Adj_Tbe= [R_1 zeros(3);skew(P_1)*R_1 R_1];
 
-linear_ee_frame = transpose_rotation_matrix * linear_velocity_ee;
+V_e_o= Adj*twist_ee;
+V_adj= inv(Adj_Tbe)*twist_ee;
 
-disp("Angular velocity of the end effector wrt to the base, projected in the EE frame");
-disp(angular_ee_frame);
+disp("Velocity of end effector, projected in end effector frame:");
+disp(V_e_o);
+disp(V_adj);
 
-disp("Linear Velocity of the end effector wrt to the base, projected in the EE frame");
-disp(linear_ee_frame);
 
 
 
