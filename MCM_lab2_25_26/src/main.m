@@ -151,6 +151,7 @@ twist_ee= km.J*q_velocities';
 disp("Velocity of end effector in base frame:")
 disp(twist_ee);
 
+%using the adjoint(T^-1)
 R= Te_b(1:3,1:3);
 P= Te_b(1:3,4);
 Adj= [R zeros(3);skew(P)*R R];
@@ -167,6 +168,14 @@ disp("Velocity of end effector, projected in end effector frame:");
 disp(V_e_o);
 disp(V_adj);
 
-
+%using rotation matrx
+angular= twist_ee(1:3,:);
+linear= twist_ee(4:6,:);
+angular_ee_frame = R_1'*angular;
+r_en=R_1*[0 0 0.06]';
+linear_ee_frame= R_1'*[cross(angular,P_1)] + R_1'*linear;
+disp("Velocity of End effector, projected in the e frame:");
+disp(angular_ee_frame);
+disp(linear_ee_frame);
 
 

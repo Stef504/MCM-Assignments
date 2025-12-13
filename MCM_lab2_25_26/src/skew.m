@@ -6,4 +6,6 @@ function S = skew(a)
             z=a(3);
             
             S=[0 -z y;z 0 -x; -y x 0];
-    end
+end
+
+
