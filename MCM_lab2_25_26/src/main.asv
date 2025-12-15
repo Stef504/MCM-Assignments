@@ -13,16 +13,16 @@ jointType = [0 0 0 0 0 1 0]; % specify two possible link type: Rotational, Prism
 geometricModel = geometricModel(iTj_0,jointType);
 
 %% Q1.3
- %task dependant, attached tool
-%T7ee=[1 0 0 0;
-      % 0 1 0 0;
-      % 0 0 1 0.060;
-      % 0 0 0 1];
+ %task dependant
+T7ee=[1 0 0 0;
+      0 1 0 0;
+      0 0 1 0.060;
+      0 0 0 1];
 
 Tb_n=geometricModel.getTransformWrtBase(7);
-%Tb_e=Tb_n*T7ee;
+Tb_e=Tb_n*T7ee;
 disp("Transformation matrix from the base to the EE:");
-disp(Tb_n);
+disp(Tb_e);
 
 T2_6= geometricModel.getTransform6wrt2(6);
 disp("Transformation matrix from frame 2 to 6:");
@@ -137,9 +137,9 @@ Tb_n= geometricModel.getTransformWrtBase(7);
 
 %including a tool
 % T7ee=[1 0 0 0;
-      % 0 1 0 0;
-      % 0 0 1 0.060;
-      % 0 0 0 1];
+      0 1 0 0;
+      0 0 1 0.060;
+      0 0 0 1];
 
 %Tb_e=Tb_n*T7ee;
 disp("Transformation matrix from base to end effector, projected in base frame:");
@@ -159,8 +159,8 @@ P= Te_b(1:3,4);
 Adj= [R zeros(3);skew(P)*R R];
 
 %inverse of adjoint is the same of adj of inverse
-R_1= Tb_n(1:3,1:3);
-P_1= Tb_n(1:3,4);
+R_1= Tb_e(1:3,1:3);
+P_1= Tb_e(1:3,4);
 Adj_Tbe= [R_1 zeros(3);skew(P_1)*R_1 R_1];
 
 V_e_o= Adj*twist_ee;

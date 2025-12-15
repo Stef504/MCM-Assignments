@@ -64,21 +64,10 @@ classdef kinematicModel < handle
         % - J: end-effector jacobian matrix
 
          % TO DO
-            self.J=zeros(6,self.gm.jointNumber)
+            self.J=zeros(6,self.gm.jointNumber);
 
-            %task dependant
-            T7ee=[1 0 0 0;
-                  0 1 0 0;
-                  0 0 1 0.060;
-                  0 0 0 1];
-
-            r_en=[0 0 0.060];
-            skew_matrix= skew(r_en);
-            
-            J_en = [eye(3,3) zeros(3,3); skew_matrix' eye(3,3) ];
             bJi= self.getJacobianOfLinkWrtBase(self.gm.jointNumber); %has a return value
-            
-            self.J= J_en * bJi ; 
+            self.J= bJi;
             
         end
     end
