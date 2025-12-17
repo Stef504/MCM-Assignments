@@ -21,6 +21,7 @@ geometricModel = geometricModel(iTj_0,jointType);
 
 Tb_n=geometricModel.getTransformWrtBase(7);
 %Tb_e=Tb_n*T7ee;
+disp("Q1.3");
 disp("Transformation matrix from the base to the EE:");
 disp(Tb_n);
 
@@ -56,7 +57,7 @@ disp(bTe)
 show_simulation = true;
 
 % Set initial and final joint positions
-qf = [5*pi/12, -pi/3, 0, -pi/4, 0, 0.18, pi/5];
+qf = [5*pi/12, -pi/4, 0, -pi/4, 0, 0.18, pi/5];
 
 %%%%%%%%%%%%% SIMULATION LOOP %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Simulation variables
@@ -103,21 +104,23 @@ pm.plotFinalConfig(bTi)
 disp(geometricModel.q -qf') %should be zero
 %% Q1.5
 
-qf = [5*pi/12, -pi/3, 0, -pi/4, 0, 0.18, pi/5];
+qf = [5*pi/12, -pi/4, 0, -pi/4, 0, 0.18, pi/5];
 geometricModel.updateDirectGeometry(qf);
 
 km = kinematicModel(geometricModel);
 
 J= km.getJacobianOfLinkWrtBase(6);
+disp("Q1.5");
 disp("Jacobian of Link 6 with respect to base");
 disp(J);
 
 %% Q1.6
-qf = [5*pi/12, -pi/3, 0, -pi/4, 0, 0.18, pi/5];
+qf = [5*pi/12, -pi/4, 0, -pi/4, 0, 0.18, pi/5];
 geometricModel.updateDirectGeometry(qf)
 
 km = kinematicModel(geometricModel);
 km.updateJacobian;
+disp("Q1.6");
 disp("Jacobian of the end effector with respect to base");
 disp(km.J);
 
@@ -130,6 +133,7 @@ geometricModel.updateDirectGeometry(qf)
 km = kinematicModel(geometricModel);
 km.updateJacobian;
 
+disp("Q1.7");
 disp("Jacobian of the end effector with respect to base");
 disp(km.J);
 

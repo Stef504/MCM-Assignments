@@ -29,7 +29,10 @@ classdef kinematicModel < handle
             % bJi
             
             %TO DO
-            T_n_base= self.gm.getTransformWrtBase(7);
+            bJi=zeros(6,self.gm.jointNumber);
+
+
+            T_n_base= self.gm.getTransformWrtBase(i);
             r_n_base= T_n_base(1:3,4);
 
             for k= 1:i
