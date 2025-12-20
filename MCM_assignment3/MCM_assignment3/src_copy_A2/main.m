@@ -16,7 +16,8 @@ q = [pi/2, -pi/4, 0, -pi/4, 0, 0.15, pi/4]';
 %% Define the tool frame rigidly attached to the end-effector
 % Tool frame definition
 ident=[0 0 0 1];
-eRt = YPRToRot(psi, theta, phi);
+
+eRt = YPRToRot(pi/10,0,pi/6);
 e_r_te = [0.3,0.1,0];
 eTt = [eRt e_r_te'; ident];
 
@@ -39,23 +40,87 @@ disp('bTt q = 0');
 disp(bTt);
 
 %% Define the goal frame and initialize cartesian control
+
+q = [pi/2, -pi/4, 0, -pi/4, 0, 0.15, pi/4]';
+% Update direct geoemtry given q
+gm.updateDirectGeometry(q);
+
+% Initialize the kinematic model given the goemetric model
+km = kinematicModel(gm);
+
 % Goal definition 
 bOg = [0.2; -0.7; 0.3];
 theta = pi/2;
-bRg = rotation(0,theta,0);
+bRg = YPRToRot(0,theta,0);
 bTg = [bRg bOg;0 0 0 1]; 
 disp('bTg')
 disp(bTg)
 
-% control proportional gain 
-k_a = ...
-k_l = ...
+%Q2.1
+b_T_t= gm.getToolTransformWrtBase(eTt);
+b_T_e= gm.getTransformWrtBase(gm.jointNumber);
+disp("Transformation matrix from base to tool:");
+disp(b_T_t);
+%disp(b_T_e);
+
+%gain
+k_a=[0.8 0 0;0 0.8 0;0 0 0.8];
+k_l=[0.8 0 0;0 0.8 0;0 0 0.8];
 
 % Cartesian control initialization
-cc = cartesianControl(....);
+cc = cartesianControl(gm,k_a,k_l,eTt);
+velocity=cc.getCartesianReference(bTg);
+
+disp("Velocity of tool wrt base:");
+disp(velocity);
+
+% control proportional gain 
+km.updateJacobian;
+J_b_e= km.J;
+
+%adding the tool
+R_b_e = b_T_e(1:3,1:3);
+b_r_et= R_b_e*e_r_te';
+
+skew_matrix= skew(b_r_et);
+J_et = [eye(3,3) zeros(3,3); skew_matrix' eye(3,3) ];
+
+b_J_t =J_et*J_b_e;
+disp("Q2.3:")
+disp("Jcobian of the base to the tool:")
+disp(b_J_t);
+
+%SVD of Jacobian
+[U,S,V]= svd(b_J_t);
+
+S_inv= zeros(size(S'));
+sing_vals= diag(S);
+threshold= 0.001;
+
+for k= 1:length(sing_vals)
+    sigma= sing_vals(k);
+
+    if (sigma> threshold)
+        S_inv(k,k)= 1/sigma;
+    end
+
+    if (sigma < threshold || sigma == threshold)
+        S_inv(k,k)=0;
+    end
+
+end
+
+J_inverse= V*S_inv*U';
+
+
+%Actual Velocity of tool
+q_velocity= J_inverse*velocity;
+disp("Actually velocity of tool:");
+disp(q_velocity);
+
 
 %% Initialize control loop 
-
+qf = [pi/2, -pi/4, 0, -pi/4, 0, 0.15, pi/4]';
 % Simulation variables
 samples = 100;
 t_start = 0.0;
@@ -75,24 +140,79 @@ qmax(6) = 1;
 
 show_simulation = true;
 pm = plotManipulators(show_simulation);
-pm.initMotionPlot(t, bTg(1:3,4));
+pm.initMotionPlot(t);
+
 
 %%%%%%% Kinematic Simulation %%%%%%%
-for i = t
+for i = t_start:dt:t_end
     % Updating transformation matrices for the new configuration 
+    gm.updateDirectGeometry(qf);
+    b_T_t=gm.getToolTransformWrtBase(eTt);
+    b_T_e= gm.getTransformWrtBase(gm.jointNumber);
 
     % Get the cartesian error given an input goal frame
+    %if no error this should be an identity, this is e_T_g
+    T_error=(inv(b_T_t))*bTg;
+    % disp(T_error);
 
     % Update the jacobian matrix of the given model
-
+    km = kinematicModel(gm);
+    km.updateJacobian;
     %% INVERSE KINEMATICS
     % Compute desired joint velocities 
-    q_dot = ...
+    cc = cartesianControl(gm,k_a,k_l,eTt);
+    x_dot= cc.getCartesianReference(bTg);
+    % disp("x_dot");
+    % disp(x_dot);
+    J_b_ee= km.J;
 
-    % simulating the robot
-    q = KinematicSimulation(....);
+    %adding the tool
+    R_b_e = b_T_e(1:3,1:3);
+    b_r_et= R_b_e*e_r_te';
+
+    skew_matrix= skew(b_r_et);
+    J_et = [eye(3,3) zeros(3,3); skew_matrix' eye(3,3) ];
     
-    pm.plotIter(gm, km, i, q_dot);
+    b_J_t =J_et*J_b_ee;
+    %disp(b_J_t)
+
+    %SVD of Jacobian
+    [U,S,V]= svd(b_J_t);
+    
+    S_inv= zeros(size(S'));
+    sing_vals= diag(S);
+    threshold= 0.01;
+    lamda=0.01;
+    
+    for k= 1:length(sing_vals)
+        sigma= sing_vals(k);
+    
+        if (sigma> threshold)
+            S_inv(k,k)= 1/sigma;
+        end
+    
+        if (sigma < threshold || sigma == threshold)
+            S_inv(k,k)= sigma/(sigma+lamda)^2;
+        end
+    
+    end
+    
+    J_inverse= V*S_inv*U';
+    q_dot = J_inverse*x_dot;
+    %disp(J_inverse);
+    
+    % disp("q_dot:")
+    % disp(q_dot);
+    % simulating the robot
+    q = KinematicSimulation(qf,q_dot,dt,qmin,qmax);
+    %disp(q);
+    
+    qf=q;
+
+    for k= 1: gm.jointNumber
+        bTi(:,:,k)=gm.getTransformWrtBase(k);
+    end
+    pm.plotIter(bTi);
 
     if(norm(x_dot(1:3)) < 0.01 && norm(x_dot(4:6)) < 0.01)
         disp('Reached Requested Pose')
@@ -101,4 +221,16 @@ for i = t
 
 end
 
-pm.plotFinalConfig(gm);
+pm.plotFinalConfig(gm.getToolTransformWrtBase(eTt));
+
+%%
+% Q2.5
+velocity_ee= J_b_ee * q_dot;
+velocty_t = b_J_t* q_dot;
+
+disp("Velocity of end effector, projected in base frame:");
+disp(velocity_ee);
+
+disp("Velocity of the tool, projected in the base frame:");
+disp(velocty_t);
+

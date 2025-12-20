@@ -100,6 +100,7 @@ classdef geometricModel < handle
             end
 
             bTt= bTt * eTt;
+            %added T_O_et
           
         end
 
