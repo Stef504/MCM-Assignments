@@ -28,7 +28,7 @@ classdef cartesianControl < handle
             % Outputs :
             % x_dot : cartesian reference for inverse kinematic control
             
-            b_T_t= self.gm.getToolTransformWrtBase(self.eTt);
+            b_T_t= self.gm.getToolTransformWrtBase();
             b_T_e= self.gm.getTransformWrtBase(self.gm.jointNumber);
 
             b_r_t= b_T_t(1:3,4);
@@ -52,21 +52,17 @@ classdef cartesianControl < handle
             % disp("from rotToAngleAxis:")
             % disp(p);
             
-            % p_2=vex(0.5*(t_R_g-t_R_g'));
-            % disp("from vex, second option:")
-            % disp(p_2);
-            % b_angular_t_2= self.k_a*p_2';
-            % disp("angular from vex,second option:")
-            % disp(b_angular_t_2);
-            
+                      
             %angular and linear velocoties of the tool wrt base
             
-            b_angular_t_ee= self.k_a *p';
+            %b_angular_t_ee= self.k_a *p';
+            b_angular_t_ee= p';
             % disp("angular from rotToangleAxis")
             % disp(b_angular_t);
             b_linear_t= self.k_l*t_r_g;
+            %b_linear_t=t_r_g;
             
-            %convert to base frame
+            %convert angualar velocity to base frame
             b_angular_t= b_R_t*b_angular_t_ee;         
             
             %desired velocity of tool

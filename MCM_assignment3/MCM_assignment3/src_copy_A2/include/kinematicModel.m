@@ -48,12 +48,12 @@ classdef kinematicModel < handle
                 end
 
                 if self.gm.jointType(k) == 1
-                    J_A=[0 0 0];
+                    J_A=[0 0 0]';
                     J_L= T_base(1:3,3);
                 end
 
-                bJi(1:3,k,:)= J_A(:,:);
-                bJi(4:6,k,:)= J_L(:,:);
+                bJi(1:3,k)= J_A(:,:);
+                bJi(4:6,k)= J_L(:,:);
             end
             
 

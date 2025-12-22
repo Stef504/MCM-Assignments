@@ -91,15 +91,15 @@ classdef geometricModel < handle
 
         end
         
-        function [bTt] =getToolTransformWrtBase(self,eTt)
-         self.eTt= eTt;
+        function [bTt] =getToolTransformWrtBase(self)
+     
          bTt= eye(4);
             for i= 1:self.jointNumber
             
                 bTt = bTt * self.iTj(:,:,i);
             end
 
-            bTt= bTt * eTt;
+            bTt= bTt * self.eTt;
             %added T_O_et
           
         end

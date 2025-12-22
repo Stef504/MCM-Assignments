@@ -19,6 +19,8 @@ ident=[0 0 0 1];
 
 eRt = YPRToRot(pi/10,0,pi/6);
 e_r_te = [0.3,0.1,0];
+
+%where e is the last joint and t is the tool frame
 eTt = [eRt e_r_te'; ident];
 
 %% Initialize Geometric Model (GM) and Kinematic Model (KM)
@@ -32,9 +34,10 @@ gm.updateDirectGeometry(q);
 % Initialize the kinematic model given the goemetric model
 km = kinematicModel(gm);
 
-bTt = gm.getToolTransformWrtBase(eTt);
+bTt = gm.getToolTransformWrtBase();
 
-disp("eTt");
+
+disp("nTt");
 disp(eTt);
 disp('bTt q = 0');
 disp(bTt);
@@ -57,7 +60,7 @@ disp('bTg')
 disp(bTg)
 
 %Q2.1
-b_T_t= gm.getToolTransformWrtBase(eTt);
+b_T_t= gm.getToolTransformWrtBase();
 b_T_e= gm.getTransformWrtBase(gm.jointNumber);
 disp("Transformation matrix from base to tool:");
 disp(b_T_t);
@@ -71,7 +74,7 @@ k_l=[0.8 0 0;0 0.8 0;0 0 0.8];
 cc = cartesianControl(gm,k_a,k_l,eTt);
 velocity=cc.getCartesianReference(bTg);
 
-disp("Velocity of tool wrt base:");
+disp("Desired Velocity of tool wrt base:");
 disp(velocity);
 
 % control proportional gain 
@@ -140,20 +143,20 @@ qmax(6) = 1;
 
 show_simulation = true;
 pm = plotManipulators(show_simulation);
-pm.initMotionPlot(t);
+pm.initMotionPlot(t, bTg(1:3,4));
 
 
 %%%%%%% Kinematic Simulation %%%%%%%
-for i = t_start:dt:t_end
+for i = t
     % Updating transformation matrices for the new configuration 
     gm.updateDirectGeometry(qf);
-    b_T_t=gm.getToolTransformWrtBase(eTt);
+    b_T_t=gm.getToolTransformWrtBase();
     b_T_e= gm.getTransformWrtBase(gm.jointNumber);
 
     % Get the cartesian error given an input goal frame
     %if no error this should be an identity, this is e_T_g
     T_error=(inv(b_T_t))*bTg;
-    % disp(T_error);
+    %disp(T_error);
 
     % Update the jacobian matrix of the given model
     km = kinematicModel(gm);
@@ -163,10 +166,11 @@ for i = t_start:dt:t_end
     cc = cartesianControl(gm,k_a,k_l,eTt);
     x_dot= cc.getCartesianReference(bTg);
     % disp("x_dot");
-    % disp(x_dot);
+    %disp(x_dot);
     J_b_ee= km.J;
 
     %adding the tool
+    %where e is the last joint and t is the tool
     R_b_e = b_T_e(1:3,1:3);
     b_r_et= R_b_e*e_r_te';
 
@@ -181,20 +185,22 @@ for i = t_start:dt:t_end
     
     S_inv= zeros(size(S'));
     sing_vals= diag(S);
+    sigma_min=min(sing_vals);
     threshold= 0.01;
     lamda=0.01;
     
+    if sigma_min >= threshold
+        lamda_sq=0;
+    end
+
+    if sigma_min <= threshold
+        lamda_sq= (1-(sigma_min/threshold)^2)*lamda;
+    end
+
     for k= 1:length(sing_vals)
-        sigma= sing_vals(k);
-    
-        if (sigma> threshold)
-            S_inv(k,k)= 1/sigma;
-        end
-    
-        if (sigma < threshold || sigma == threshold)
-            S_inv(k,k)= sigma/(sigma+lamda)^2;
-        end
-    
+        sigma = sing_vals(k);
+        S_inv(k,k)=sigma/(sigma^2+lamda_sq);
+           
     end
     
     J_inverse= V*S_inv*U';
@@ -202,8 +208,9 @@ for i = t_start:dt:t_end
     %disp(J_inverse);
     
     % disp("q_dot:")
-    % disp(q_dot);
+    %disp(q_dot);
     % simulating the robot
+
     q = KinematicSimulation(qf,q_dot,dt,qmin,qmax);
     %disp(q);
     
@@ -212,7 +219,9 @@ for i = t_start:dt:t_end
     for k= 1: gm.jointNumber
         bTi(:,:,k)=gm.getTransformWrtBase(k);
     end
-    pm.plotIter(bTi);
+    bTi(:,:, gm.jointNumber + 1) = b_T_t;
+    
+    pm.plotIter(gm, km, i, q_dot);
 
     if(norm(x_dot(1:3)) < 0.01 && norm(x_dot(4:6)) < 0.01)
         disp('Reached Requested Pose')
@@ -221,13 +230,16 @@ for i = t_start:dt:t_end
 
 end
 
-pm.plotFinalConfig(gm.getToolTransformWrtBase(eTt));
+pm.plotFinalConfig(gm);
 
 %%
 % Q2.5
+
 velocity_ee= J_b_ee * q_dot;
 velocty_t = b_J_t* q_dot;
 
+disp("Final joint velocities:");
+disp(q_dot);
 disp("Velocity of end effector, projected in base frame:");
 disp(velocity_ee);
 
