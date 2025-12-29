@@ -179,9 +179,13 @@ angular= twist_ee(1:3,:);
 linear= twist_ee(4:6,:);
 angular_ee_frame = R_1'*angular;
 r_en=R_1*[0 0 0.06]';
+%NOT THIS
 linear_ee_frame= R_1'*[cross(angular,P_1)] + R_1'*linear;
+
+%DO THIS PURELY ROTATION MATRIX
+linear_ee_frame_2= R_1'*linear;
 disp("Velocity of End effector, projected in the e frame:");
 disp(angular_ee_frame);
-disp(linear_ee_frame);
+disp(linear_ee_frame_2);
 
 

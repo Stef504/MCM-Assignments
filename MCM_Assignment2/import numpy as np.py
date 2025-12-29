@@ -35,27 +35,27 @@ T_01 = np.array([
 
 # T_12
 pose_12 = np.array([0, 0, 0.110])
-rotation_12 = rot_x(-90) @ rot_z(-90)
+rotation_12 = rot_z(-90) @ rot_y(-90)
 T_12 = make_transform(rotation_12, pose_12)
 
 # T_23
 pose_23 = np.array([0.1, 0, 0])
-rotation_23 = rot_y(90) 
+rotation_23 = rot_y(90) @ rot_z(180)
 T_23 = make_transform(rotation_23, pose_23)
 
 # T_34
 pose_34 = np.array([0, 0, 0.325])
-rotation_34 = rot_y(-90) 
+rotation_34 = rot_y(90) @ rot_z(180) 
 T_34 = make_transform(rotation_34, pose_34)
 
 # T_45
 pose_45 = np.array([0.095, 0, 0])
-rotation_45 = rot_y(90) 
+rotation_45 = rot_y(90) @rot_z(-90)
 T_45 = make_transform(rotation_45, pose_45)
 
 # T_56
 pose_56 = np.array([0, 0, 0.095])
-rotation_56 = np.eye(3)
+rotation_56 = rot_z(-180) 
 T_56 = make_transform(rotation_56, pose_56)
 
 # T_67

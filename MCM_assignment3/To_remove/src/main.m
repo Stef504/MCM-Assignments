@@ -12,14 +12,17 @@ disp(iTj_0);
 jointType = [0 0 0 0 0 1 0]; % specify two possible link type: Rotational, Prismatic.
 q = [pi/2, -pi/4, 0, -pi/4, 0, 0.15, pi/4]';
 
+
 %% Define the tool frame rigidly attached to the end-effector
 % Tool frame definition
-eRt = ....
-e_r_te = ...;
-eTt = ...;
+ident=[0 0 0 1];
+
+eRt = YPRToRot(pi/10,0,pi/6);
+e_r_te = [0.3,0.1,0];
+eTt = [eRt e_r_te'; ident];
 
 %% Initialize Geometric Model (GM) and Kinematic Model (KM)
-
+q = [0, 0, 0, 0, 0, 0, 0];
 % Initialize geometric model with q0
 gm = geometricModel(iTj_0,jointType,eTt);
 
@@ -29,7 +32,7 @@ gm.updateDirectGeometry(q);
 % Initialize the kinematic model given the goemetric model
 km = kinematicModel(gm);
 
-bTt = gm.getToolTransformWrtBase();
+bTt = gm.getToolTransformWrtBase(eTt);
 
 disp("eTt");
 disp(eTt);
@@ -37,20 +40,63 @@ disp('bTt q = 0');
 disp(bTt);
 
 %% Define the goal frame and initialize cartesian control
+
+q = [pi/2, -pi/4, 0, -pi/4, 0, 0.15, pi/4]';
+
+% Update direct geoemtry given q
+gm.updateDirectGeometry(q);
+
+% Initialize the kinematic model given the goemetric model
+km = kinematicModel(gm);
+
 % Goal definition 
 bOg = [0.2; -0.7; 0.3];
 theta = pi/2;
-bRg = rotation(0,theta,0);
+bRg = YPRToRot(0,theta,0);
 bTg = [bRg bOg;0 0 0 1]; 
 disp('bTg')
 disp(bTg)
 
+%Q2.1
+b_T_t= gm.getToolTransformWrtBase(eTt);
+
+disp("Transformation matrix from base to tool:");
+disp(b_T_t);
+
+b_r_t= b_T_t(1:3,4);
+b_r_g= bTg(1:3,4);
+
+%error:
+
+%linear error:
+e_r_g= b_r_g-b_r_t;
+
+%rotation error:
+b_R_t= b_T_t(1:3,1:3);
+b_R_g= bTg(1:3,1:3);
+
+e_R_g= b_R_t'*b_R_g;
+angular= vex(e_R_g);
+
+%angular and linear velocoties of the tool wrt base
+k_a=[0.8 0 0;0 0.8 0;0 0 0.8];
+k_l=[0.8 0 0;0 0.8 0;0 0 0.8];
+
+b_v_t= [k_a zeros(3) ;zeros(3) k_l]*[e_r_g;angular'];
+disp("Velocity of tool wrt base:");
+disp(b_v_t);
+
 % control proportional gain 
-k_a = ...
-k_l = ...
+J=km.updateJacobian;
+
+skew_matrix= skew(eTt);
+J_en = [eye(3,3) zeros(3,3); skew_matrix' eye(3,3) ];
+
+b_J_t =J * J_en;
+
 
 % Cartesian control initialization
-cc = cartesianControl(....);
+%cc = cartesianControl(....);
 
 %% Initialize control loop 
 
