@@ -1,0 +1,11 @@
+12=90x,-180y z frame by 38mm suppose to be 98mm
+23=90y x frame by 105mm
+34=90y,180x z frame by 326.5,y frame by 145.5
+45=-90z,-90x x frame by 35mm
+56=-90z,-90y z frame by 385mm, 
+67=90y,90z x frame by 153mm(if on EE)
+
+
+For a 3D rotation matrix, the eigenvector corresponds to the axis of rotation, as this is the only direction that is not changed by the rotation—it remains unchanged or is scaled by an eigenvalue of \(1\)
+
+does this mean we haven't changed our axis of rotation?

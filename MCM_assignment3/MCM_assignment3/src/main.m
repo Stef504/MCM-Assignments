@@ -74,7 +74,7 @@ k_l=[0.8 0 0;0 0.8 0;0 0 0.8];
 cc = cartesianControl(gm,k_a,k_l,eTt);
 velocity=cc.getCartesianReference(bTg);
 
-disp("Desired Velocity of tool wrt base:");
+disp("Desired Velocity of tool wrt base at Intial Position:");
 disp(velocity);
 
 % control proportional gain 
@@ -118,8 +118,13 @@ J_inverse= V*S_inv*U';
 
 %Actual Velocity of tool
 q_velocity= J_inverse*velocity;
-disp("Actually velocity of tool:");
+disp("Desired velocity of the motors at Initial Position:");
 disp(q_velocity);
+
+%Actual at start config
+q_actual=b_J_t*q_velocity;
+disp("Actual velocity of tool at initial position:");
+disp(q_actual);
 
 
 %% Initialize control loop 
@@ -165,8 +170,8 @@ for i = t
     % Compute desired joint velocities 
     cc = cartesianControl(gm,k_a,k_l,eTt);
     x_dot= cc.getCartesianReference(bTg);
-    % disp("x_dot");
-    disp(x_dot);
+    %disp("x_dot");
+    %disp(x_dot);
     J_b_ee= km.J;
 
     %adding the tool
@@ -180,16 +185,57 @@ for i = t
     b_J_t =J_et*J_b_ee;
     %disp(b_J_t)
 
-    %SVD of Jacobian
+    % %least squares SVD
+    % [U,S,V]= svd(b_J_t);
+    % 
+    % % Invert Singular Values (1/sigma)
+    % % WARNING: This will divide by zero if sigma is 0!
+    % S_inv = zeros(size(S'));
+    % sing_vals= diag(S);
+    % for k = 1:min(size(S))
+    %     sigma = sing_vals(k);
+    %     if sigma > 0
+    %         S_inv(k,k) = 1 / sigma;
+    %     end
+    % end
+    % 
+    % % Calculate q_dot
+    % J_inverse = V * S_inv * U';
+    % q_dot = J_inverse * x_dot;
+
+    % %trancuted SVD of Jacobian
+    % [U,S,V]= svd(b_J_t);
+    % 
+    % S_inv= zeros(size(S'));
+    % sing_vals= diag(S);
+    % threshold= 0.01;
+    % 
+    % for k=1:min(size(S))
+    %     sigma = sing_vals(k);
+    % 
+    %     if sigma > threshold
+    %         S_inv(k,k)= 1/sigma; 
+    %     end
+    % 
+    %     if sigma < threshold
+    %         S_inv(k,k)=0;
+    %     end
+    % end
+    % 
+    % J_inverse= V*S_inv*U';
+    % q_dot = J_inverse*x_dot;
+
+
+    %damped SVD of Jacobian 
     [U,S,V]= svd(b_J_t);
-    
+
     S_inv= zeros(size(S'));
     sing_vals= diag(S);
     sigma_min=min(sing_vals);
-    threshold= 0.01;
+    threshold= 0.001;
     lamda=0.01;
-    
-    if sigma_min >= threshold
+
+    if sigma_min > threshold
         lamda_sq=0;
     end
 
@@ -200,17 +246,17 @@ for i = t
     for k= 1:length(sing_vals)
         sigma = sing_vals(k);
         S_inv(k,k)=sigma/(sigma^2+lamda_sq);
-           
+
     end
-    
+
     J_inverse= V*S_inv*U';
     q_dot = J_inverse*x_dot;
     %disp(J_inverse);
-    
+
     % disp("q_dot:")
     %disp(q_dot);
-    % simulating the robot
 
+    % simulating the robot
     q = KinematicSimulation(qf,q_dot,dt,qmin,qmax);
     %disp(q);
     
@@ -238,8 +284,12 @@ pm.plotFinalConfig(gm);
 velocity_ee= J_b_ee * q_dot;
 velocty_t = b_J_t* q_dot;
 
+disp("Desired Joint Velocities:");
+disp(x_dot);
+
 disp("Final joint velocities:");
 disp(q_dot);
+
 disp("Velocity of end effector, projected in base frame:");
 disp(velocity_ee);
 
