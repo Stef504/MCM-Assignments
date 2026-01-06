@@ -6,17 +6,15 @@ classdef cartesianControl < handle
         gm % An instance of GeometricModel
         k_a
         k_l
-        eTt
     end
 
     methods
         % Constructor to initialize the geomModel property
-        function self = cartesianControl(gm,angular_gain,linear_gain,eTt)
+        function self = cartesianControl(gm,angular_gain,linear_gain)
             if nargin > 2
                 self.gm = gm;
                 self.k_a = angular_gain;
                 self.k_l = linear_gain;
-                self.eTt= eTt;
             else
                 error('Not enough input arguments (cartesianControl)')
             end
@@ -63,7 +61,7 @@ classdef cartesianControl < handle
             %b_linear_t=t_r_g;
             
             %convert angualar velocity to base frame
-            b_angular_t= b_R_t*b_angular_t_ee;         
+            b_angular_t= self.k_a*b_R_t*b_angular_t_ee;         
             
             %desired velocity of tool
             x_dot=[b_angular_t;b_linear_t];

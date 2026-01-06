@@ -71,7 +71,38 @@ k_a=[0.8 0 0;0 0.8 0;0 0 0.8];
 k_l=[0.8 0 0;0 0.8 0;0 0 0.8];
 
 % Cartesian control initialization
-cc = cartesianControl(gm,k_a,k_l,eTt);
+b_T_t= gm.getToolTransformWrtBase();
+b_T_e= gm.getTransformWrtBase(gm.jointNumber);
+
+b_r_t= b_T_t(1:3,4);
+b_r_g= bTg(1:3,4);
+
+%linear error:
+%in base frame
+t_r_g= b_r_g-b_r_t;
+
+%rotation error:
+b_R_t= b_T_t(1:3,1:3);
+b_R_g= bTg(1:3,1:3);
+
+%in tool frame
+t_R_g= b_R_t'*b_R_g;
+
+[h,theta]=RotToAngleAxis(t_R_g);
+
+%our correction factor
+p= theta*h;
+          
+%angular and linear velocoties of the tool wrt base
+b_angular_t_ee= p';
+b_angular_t= b_R_t*b_angular_t_ee; 
+disp("Linear error at initial position:");
+disp(t_r_g);
+
+disp("Orientation error at intial position:");
+disp(b_angular_t);
+
+cc = cartesianControl(gm,k_a,k_l);
 velocity=cc.getCartesianReference(bTg);
 
 disp("Desired Velocity of tool wrt base at Intial Position:");
@@ -132,7 +163,7 @@ qf = [pi/2, -pi/4, 0, -pi/4, 0, 0.15, pi/4]';
 % Simulation variables
 samples = 100;
 t_start = 0.0;
-t_end = 10.0;
+t_end = 20.0;
 dt = (t_end-t_start)/samples;
 t = t_start:dt:t_end; 
 
@@ -168,7 +199,7 @@ for i = t
     km.updateJacobian;
     %% INVERSE KINEMATICS
     % Compute desired joint velocities 
-    cc = cartesianControl(gm,k_a,k_l,eTt);
+    cc = cartesianControl(gm,k_a,k_l);
     x_dot= cc.getCartesianReference(bTg);
     %disp("x_dot");
     %disp(x_dot);
@@ -280,6 +311,8 @@ pm.plotFinalConfig(gm);
 
 %%
 % Q2.5
+disp("Error transformation matrix:");
+disp(T_error);
 
 velocity_ee= J_b_ee * q_dot;
 velocty_t = b_J_t* q_dot;
