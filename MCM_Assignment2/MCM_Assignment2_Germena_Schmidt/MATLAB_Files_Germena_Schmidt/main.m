@@ -20,7 +20,7 @@ disp("Q1.3");
 disp("Transformation matrix from the base to the EE:");
 disp(Tb_n);
 
-T2_6= geometricModel.getTransform6wrt2(6);
+T2_6= geometricModel.getTransformK1wrtK2(2,6);
 disp("Transformation matrix from frame 2 to 6:");
 disp(T2_6);
 %Inverse

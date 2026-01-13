@@ -88,7 +88,7 @@ classdef geometricModel < handle
             
 
         end
-        function [bTk] = getTransform6wrt2(self,k)
+        function [bTk] = getTransformK1wrtK2(self,k1,k2)
             %% GetTransformatioWrtBase function
             % Inputs :
             % k: the idx for which computing the transformation matrix
@@ -99,7 +99,7 @@ classdef geometricModel < handle
 
             
             %TO DO
-            for i= 3:k
+            for i= (k1+1):k2
               
                 bTk = bTk * self.iTj(:,:,i);
                 
