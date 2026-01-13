@@ -13,11 +13,6 @@ jointType = [0 0 0 0 0 1 0]; % specify two possible link type: Rotational, Prism
 geometricModel = geometricModel(iTj_0,jointType);
 
 %% Q1.3
- %task dependant, attached tool
-%T7ee=[1 0 0 0;
-      % 0 1 0 0;
-      % 0 0 1 0.060;
-      % 0 0 0 1];
 
 Tb_n=geometricModel.getTransformWrtBase(7);
 %Tb_e=Tb_n*T7ee;
@@ -138,14 +133,6 @@ disp("Jacobian of the end effector with respect to base");
 disp(km.J);
 
 Tb_n= geometricModel.getTransformWrtBase(7);
-
-%including a tool
-% T7ee=[1 0 0 0;
-      % 0 1 0 0;
-      % 0 0 1 0.060;
-      % 0 0 0 1];
-
-%Tb_e=Tb_n*T7ee;
 disp("Transformation matrix from base to end effector, projected in base frame:");
 disp(Tb_n);
 
@@ -157,29 +144,23 @@ twist_ee= km.J*q_velocities';
 disp("Velocity of end effector in base frame:")
 disp(twist_ee);
 
-%using the adjoint(T^-1)
-R= Te_b(1:3,1:3);
-P= Te_b(1:3,4);
-Adj= [R zeros(3);skew(P)*R R];
+%using rotation matrx
 
-%inverse of adjoint is the same of adj of inverse
 R_1= Tb_n(1:3,1:3);
 P_1= Tb_n(1:3,4);
-Adj_Tbe= [R_1 zeros(3);skew(P_1)*R_1 R_1];
 
-V_e_o= Adj*twist_ee;
-V_adj= inv(Adj_Tbe)*twist_ee;
-
-disp("Velocity of end effector, projected in end effector frame:");
-disp(V_e_o);
-disp(V_adj);
-
-%using rotation matrx
 angular= twist_ee(1:3,:);
 linear= twist_ee(4:6,:);
+
 angular_ee_frame = R_1'*angular;
-r_en=R_1*[0 0 0.06]';
-linear_ee_frame= R_1'*[cross(angular,P_1)] + R_1'*linear;
+
+%if tool attached
+% r_en=R_1*[0 0 0.06]';
+% linear_ee_frame= R_1'*[cross(angular,P_1)] + R_1'*linear;
+
+%no tool attached
+linear_ee_frame= R_1' *linear;
+
 disp("Velocity of End effector, projected in the e frame:");
 disp(angular_ee_frame);
 disp(linear_ee_frame);

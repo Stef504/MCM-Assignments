@@ -24,7 +24,7 @@ e_r_te = [0.3,0.1,0];
 eTt = [eRt e_r_te'; ident];
 
 %% Initialize Geometric Model (GM) and Kinematic Model (KM)
-q = [0, 0, 0, 0, 0, 0, 0];
+%q = [0, 0, 0, 0, 0, 0, 0];
 % Initialize geometric model with q0
 gm = geometricModel(iTj_0,jointType,eTt);
 
@@ -64,7 +64,6 @@ b_T_t= gm.getToolTransformWrtBase();
 b_T_e= gm.getTransformWrtBase(gm.jointNumber);
 disp("Transformation matrix from base to tool:");
 disp(b_T_t);
-%disp(b_T_e);
 
 %gain
 k_a=[0.8 0 0;0 0.8 0;0 0 0.8];
@@ -125,29 +124,30 @@ disp("Jcobian of the base to the tool:")
 disp(b_J_t);
 
 %SVD of Jacobian
-[U,S,V]= svd(b_J_t);
+J_inverse= Pseudo_Inverse(b_J_t);
+% [U,S,V]= svd(b_J_t);
+% 
+% S_inv= zeros(size(S'));
+% sing_vals= diag(S);
+% sigma_min=min(sing_vals);
+% threshold= 0.001;
+% lamda=0.01;
+% 
+% if sigma_min > threshold
+%     lamda_sq=0;
+% end
+% 
+% if sigma_min <= threshold
+%     lamda_sq= (1-(sigma_min/threshold)^2)*lamda;
+% end
+% 
+% for k= 1:length(sing_vals)
+%     sigma = sing_vals(k);
+%     S_inv(k,k)=sigma/(sigma^2+lamda_sq);
+% 
+% end
 
-S_inv= zeros(size(S'));
-sing_vals= diag(S);
-sigma_min=min(sing_vals);
-threshold= 0.001;
-lamda=0.01;
-
-if sigma_min > threshold
-    lamda_sq=0;
-end
-
-if sigma_min <= threshold
-    lamda_sq= (1-(sigma_min/threshold)^2)*lamda;
-end
-
-for k= 1:length(sing_vals)
-    sigma = sing_vals(k);
-    S_inv(k,k)=sigma/(sigma^2+lamda_sq);
-
-end
-
-J_inverse= V*S_inv*U';
+% J_inverse= V*S_inv*U';
 
 
 %Actual Velocity of tool
@@ -261,29 +261,7 @@ for i = t
 
 
     %damped SVD of Jacobian 
-    [U,S,V]= svd(b_J_t);
-
-    S_inv= zeros(size(S'));
-    sing_vals= diag(S);
-    sigma_min=min(sing_vals);
-    threshold= 0.001;
-    lamda=0.01;
-
-    if sigma_min > threshold
-        lamda_sq=0;
-    end
-
-    if sigma_min <= threshold
-        lamda_sq= (1-(sigma_min/threshold)^2)*lamda;
-    end
-
-    for k= 1:length(sing_vals)
-        sigma = sing_vals(k);
-        S_inv(k,k)=sigma/(sigma^2+lamda_sq);
-
-    end
-
-    J_inverse= V*S_inv*U';
+    J_inverse= Pseudo_Inverse(b_J_t);
     q_dot = J_inverse*x_dot;
     %disp(J_inverse);
 
@@ -323,7 +301,7 @@ velocty_t = b_J_t* q_dot;
 disp("Desired Joint Velocities:");
 disp(x_dot);
 
-disp("Final joint velocities:");
+disp("Final motor velocities:");
 disp(q_dot);
 
 disp("Velocity of end effector, projected in base frame:");
